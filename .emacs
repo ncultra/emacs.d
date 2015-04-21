@@ -1,6 +1,6 @@
 ;; Red Hat Linux default .emacs initialization file
 ;; Are we running XEmacs or Emacs?
-(defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+;;defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
 ;;(add-to-list 'default-frame-alist '(left . 20))
 ;;(add-to-list 'default-frame-alist '(top . 0))
@@ -15,8 +15,19 @@
   (tool-bar-mode -1)
   (display-battery-mode 1))
 
-(add-to-list 'load-path "~/.emacs.d/")
+;;(add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/packages")
+(add-to-list 'load-path "~/.emacs.d/plugins")
+(add-to-list 'load-path "~/.emacs.d/auto-save-list")
+(add-to-list 'load-path "~/.emacs.d/ac-dict")
+
+(require 'package) 
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/") t)
+(when (< emacs-major-version 24)
+  ;; For important compatibility libraries like cl-lib
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+(package-initialize) 
 
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
@@ -62,9 +73,7 @@
 (global-set-key "\C-x\C-v" 'speedbar-get-focus)
 (global-set-key "\C-x\C-c" `save-buffers-kill-emacs)
 ;; Turn on font-lock mode for Emacs
-(cond ((not running-xemacs)
-	(global-font-lock-mode t)
-))
+(global-font-lock-mode t)
 
 ;; Always end a file with a newline
 (setq require-final-newline t)
@@ -87,8 +96,16 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(c-default-style (quote ((c-mode . "bsd") (c++-mode . "stroustrup") (java-mode . "java") (other . "gnu"))))
+ '(ansi-color-faces-vector
+   [default default default italic underline success warning error])
+ '(c-default-style
+   (quote
+    ((c-mode . "bsd")
+     (c++-mode . "stroustrup")
+     (java-mode . "java")
+     (other . "gnu"))))
  '(column-number-mode t)
+ '(custom-enabled-themes (quote (wombat)))
  '(display-time-mode t)
  '(font-lock-mode t t (font-lock))
  '(gutter-buffers-tab-visible-p nil)
@@ -96,18 +113,19 @@
  '(paren-mode (quote sexp) nil (paren))
  '(query-user-mail-address nil)
  '(safe-local-variable-values (quote ((c-file-style . bsd))))
-;; '(speedbar-frame-parameters (quote ((minibuffer) (width . 60) (border-width . 0) (menu-bar-lines . 0) (tool-bar-lines . 0) (unsplittable . t))))
-;; '(speedbar-supported-extension-expressions (quote (".[ch]\\(\\+\\+\\|pp\\|c\\|h\\|xx\\)?" ".tex\\(i\\(nfo\\)?\\)?" ".el" ".emacs" ".l" ".lsp" ".p" ".java" ".f\\(90\\|77\\|or\\)?" ".ada" ".p[lm]" ".tcl" ".m" ".scm" ".pm" ".py" ".g" ".s?html" ".ma?k" "[Mm]akefile\\(\\.in\\)?" ".txt" ".y")))
+ '(spice-output-local "Gnucap")
+ '(spice-simulator "Gnucap")
+ '(spice-waveform-viewer "Gwave")
  '(toolbar-visible-p nil)
  '(tramp-debug-buffer t)
  '(user-mail-address "ncmike@ncultra.org"))
 
-(custom-set-faces
+;;(custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 128 :width normal :foundry "urw" :family "Nimbus Mono L")))))
+ ;;'(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 128 :width normal :foundry "urw" :family "Nimbus Mono L")))))
 ;(require 'efs)
 (require 'tramp)
 (require 'calendar)
@@ -239,15 +257,10 @@
       (interactive "*p\nP")
       (let ((backward-delete-char-untabify-method 'hungry))
         (backward-delete-char-untabify arg killp)))
-(setq load-home-init-file t) ; don't load init file from ~/.xemacs/init.el
+;;(setq load-home-init-file t) ; don't load init file from ~/.xemacs/init.el
 
 ;;---------------------------------------------------------------
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(inhibit-startup-screen t))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
