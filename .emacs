@@ -299,15 +299,11 @@
   (split-window-horizontally)
   (split-window-horizontally)
   (balance-windows))
+(global-set-key "\C-m" 'windmove-right)
+(global-set-key "\C-n" 'windmove-left)
+(global-set-key "\C-l" 'windmove-up)
+(global-set-key "\C-k" 'windmove-down)
 
-(global-set-key "\C-W" 'emacs-window)
-
-;; split-window-vertically
-;; split-window-horizontally
-
-;;(delete-other-frames)
-
-;; balance-windows
 
 (defun toggle-fullscreen ()
   "Toggle full screen on X11"
