@@ -294,10 +294,18 @@
 
 (global-set-key "\C-B" 'compile) 
 
+(defun emacs-window()
+  (interactive)
+  (split-window-horizontally)
+  (split-window-horizontally)
+  (balance-windows))
+
+(global-set-key "\C-W" 'emacs-window)
+
 ;; split-window-vertically
 ;; split-window-horizontally
 
-;; delete-other-frames
+;;(delete-other-frames)
 
 ;; balance-windows
 
