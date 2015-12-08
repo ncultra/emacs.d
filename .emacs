@@ -106,19 +106,36 @@
      (other . "gnu"))))
  '(column-number-mode t)
  '(custom-enabled-themes (quote (wombat)))
+ '(display-battery-mode t)
  '(display-time-mode t)
  '(font-lock-mode t t (font-lock))
  '(gutter-buffers-tab-visible-p nil)
  '(inhibit-startup-screen t)
+ '(mail-user-agent (quote message-user-agent))
+ '(notmuch-saved-searches
+   (quote
+    (("new qemu" . "tag:qemu AND tag:unread")
+     (:name "new xen" :query "tag:xen and tag:unread")
+     (:name "tome" :query "tag:unread and to:ncmike@ncultra.org"))))
+ '(notmuch-search-oldest-first nil)
  '(paren-mode (quote sexp) nil (paren))
  '(query-user-mail-address nil)
  '(safe-local-variable-values (quote ((c-file-style . bsd))))
+ '(send-mail-function (quote sendmail-send-it))
+ '(sendmail-program "/usr/bin/msmtp")
  '(spice-output-local "Gnucap")
  '(spice-simulator "Gnucap")
  '(spice-waveform-viewer "Gwave")
+ '(tool-bar-mode nil)
  '(toolbar-visible-p nil)
  '(tramp-debug-buffer t)
  '(user-mail-address "ncmike@ncultra.org"))
+
+(require 'notmuch)
+
+;; (setq notmuch-saved-searches '(("new qemu" . "tag:qemu AND tag:unread")))
+
+
 
 ;;(custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -157,6 +174,7 @@
 	)
 "Linux CodingStyle")
 (c-add-style "linux" linux-c-style )
+(setq c-default-style "linux")
 
 (add-hook 'c-mode-common-hook
           (lambda () (c-toggle-auto-hungry-state 1)))
@@ -266,13 +284,15 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
 
 
 ;;-------------------more stuff-----------------------
 
 ;; a copy key, leaves the text as-is
 (global-set-key "\C-Q" 'copy-region-as-kill)
+
+(global-set-key "\C-B" 'compile) 
 
 ;; split-window-vertically
 ;; split-window-horizontally
@@ -290,6 +310,5 @@
      (when (not (frame-parameter nil 'fullscreen)) 'fullboth))))
 
 (global-set-key [f11] 'toggle-fullscreen)
-
 
 
