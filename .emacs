@@ -2,6 +2,8 @@
 ;; Are we running XEmacs or Emacs?
 ;;defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
+(setq windmove-window-distance-delta 2)
+ 
 ;;(add-to-list 'default-frame-alist '(left . 20))
 ;;(add-to-list 'default-frame-alist '(top . 0))
 ;;(add-to-list 'default-frame-alist '(height . 80))
@@ -12,12 +14,11 @@
 ;;  (scroll-bar-mode -1)
 ;;  (menu-bar-mode -1)
   ;; disable the top toolbar
-  (tool-bar-mode -1)
-  (display-battery-mode 1))
+  (tool-bar-mode -1))
 
-;;(add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/packages")
-(add-to-list 'load-path "~/.emacs.d/plugins")
+;(add-to-list 'load-path "~/.emacs.d/plugins")
 (add-to-list 'load-path "~/.emacs.d/auto-save-list")
 (add-to-list 'load-path "~/.emacs.d/ac-dict")
 
@@ -47,20 +48,20 @@
 (ac-config-default)
 (global-auto-complete-mode t)
 
-(add-to-list 'load-path "~/.emacs.d/plugins/yasnippet")
+(add-to-list 'load-path "~/.emacs.d/packages/yasnippet")
 (require 'yasnippet)
 
-(yas--initialize)
+(yas/initialize)
 
-(yas/load-directory "~/.emacs.d/plugins/yasnippet/snippets")
-(yas/load-directory "~/.emacs.d/plugins/yasnippet/mysnippets")
-(yas/load-directory "~/.emacs.d/plugins/yasnippet/objc-snippets")
+(yas/load-directory "~/.emacs.d/packages/yasnippet/snippets")
+(yas/load-directory "~/.emacs.d/packages/yasnippet/mysnippets")
+;(yas/load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
 
-(defun yas-load-objc ()
-  (interactive)
-  (yas--minor-mode t)
-  (yas--load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
-)
+;(defun yas-load-objc ()
+;  (interactive)
+;  (yas--minor-mode t)
+;  (yas--load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
+;)
 
 (define-key global-map [button4] 'scroll-down)
 (define-key global-map [button5] 'scroll-up)
@@ -131,7 +132,7 @@
  '(tramp-debug-buffer t)
  '(user-mail-address "ncmike@ncultra.org"))
 
-(require 'notmuch)
+;;(require 'notmuch)
 
 ;; (setq notmuch-saved-searches '(("new qemu" . "tag:qemu AND tag:unread")))
 
@@ -279,28 +280,30 @@
 
 ;;---------------------------------------------------------------
 
-(custom-set-faces
+;(custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
-
+;'(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
 
 ;;-------------------more stuff-----------------------
 
 ;; a copy key, leaves the text as-is
 (global-set-key "\C-Q" 'copy-region-as-kill)
 
-(global-set-key "\C-B" 'compile) 
+(global-set-key "\C-B" 'compile)
 
-(defun emacs-window()
+(defun ew()
   (interactive)
   (split-window-horizontally)
   (split-window-horizontally)
+  (split-window-vertically)
   (balance-windows))
-(global-set-key "\C-m" 'windmove-right)
-(global-set-key "\C-n" 'windmove-left)
+
+;(global-set-key [f9] 'windmove-right)
+(global-set-key (kbd "C-<right>") 'windmove-right)
+(global-set-key (kbd "C-<left>") 'windmove-left)
 (global-set-key "\C-l" 'windmove-up)
 (global-set-key "\C-k" 'windmove-down)
 
@@ -314,5 +317,3 @@
      (when (not (frame-parameter nil 'fullscreen)) 'fullboth))))
 
 (global-set-key [f11] 'toggle-fullscreen)
-
-
