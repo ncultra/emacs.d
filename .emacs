@@ -304,8 +304,8 @@
 ;(global-set-key [f9] 'windmove-right)
 (global-set-key (kbd "C-<right>") 'windmove-right)
 (global-set-key (kbd "C-<left>") 'windmove-left)
-(global-set-key "\C-l" 'windmove-up)
-(global-set-key "\C-k" 'windmove-down)
+(global-set-key (kbd "C-<up>") 'windmove-up)
+(global-set-key (kbd "C-<down>") 'windmove-down)
 
 
 (defun toggle-fullscreen ()
