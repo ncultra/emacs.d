@@ -18,7 +18,6 @@
 
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/packages")
-;(add-to-list 'load-path "~/.emacs.d/plugins")
 (add-to-list 'load-path "~/.emacs.d/auto-save-list")
 (add-to-list 'load-path "~/.emacs.d/ac-dict")
 
@@ -63,6 +62,7 @@
 ;  (yas--load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
 ;)
 
+
 (define-key global-map [button4] 'scroll-down)
 (define-key global-map [button5] 'scroll-up)
 ;; Set up the keyboard so the delete key on both the regular keyboard
@@ -75,6 +75,8 @@
 (global-set-key "\C-x\C-c" `save-buffers-kill-emacs)
 ;; Turn on font-lock mode for Emacs
 (global-font-lock-mode t)
+
+(require 'setnu)
 
 ;; Always end a file with a newline
 (setq require-final-newline t)
@@ -152,6 +154,8 @@
 (require 'cl)
 (add-hook 'fundamental-mode 'mail-mode 'auto-fill-mode) 
 
+(add-hook 'text-mode-hook 'turn-on-setnu-mode)
+
 (defun insert-c-token ()
   (interactive)
   (insert "-*- linux-c -*-"))
@@ -179,6 +183,8 @@
 
 (add-hook 'c-mode-common-hook
           (lambda () (c-toggle-auto-hungry-state 1)))
+(add-hook 'c-mode-common-hook 'turn-on-setnu-mode)
+
 (add-hook 'objc-mode-hook
  	  (lambda () (auto-complete-mode t)))
 (add-hook 'c-mode-common-hook
@@ -221,6 +227,7 @@
                     keep-going nil)))
         (setq alist (cdr alist)))
       (c-set-style mode)
+      (setnu-mode())
 
 )))
 	
@@ -296,7 +303,7 @@
 
 (defun ew()
   (interactive)
-  (split-window-horizontally)
+;;  (split-window-horizontally)
   (split-window-horizontally)
   (split-window-vertically)
   (balance-windows))
