@@ -3,17 +3,9 @@
 ;;defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
 (setq windmove-window-distance-delta 2)
- 
-;;(add-to-list 'default-frame-alist '(left . 20))
-;;(add-to-list 'default-frame-alist '(top . 0))
-;;(add-to-list 'default-frame-alist '(height . 80))
-;;(add-to-list 'default-frame-alist '(width . 100))
+(desktop-save-mode 1)
 
 (when (display-graphic-p)
-  ;; disables scrollbar
-;;  (scroll-bar-mode -1)
-;;  (menu-bar-mode -1)
-  ;; disable the top toolbar
   (tool-bar-mode -1))
 
 (add-to-list 'load-path "~/.emacs.d/")
@@ -21,13 +13,25 @@
 (add-to-list 'load-path "~/.emacs.d/auto-save-list")
 (add-to-list 'load-path "~/.emacs.d/ac-dict")
 
-(require 'package) 
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/"))
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/") t)
 (when (< emacs-major-version 24)
   ;; For important compatibility libraries like cl-lib
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
-(package-initialize) 
+(package-initialize)
+
+(autoload 'markdown-mode "markdown-mode"
+   "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+(autoload 'gfm-mode "markdown-mode"
+   "Major mode for editing GitHub Flavored Markdown files" t)
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+
 
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
@@ -73,10 +77,9 @@
 (global-set-key [f5] 'compile)
 (global-set-key "\C-x\C-v" 'speedbar-get-focus)
 (global-set-key "\C-x\C-c" `save-buffers-kill-emacs)
+(global-set-key "\C-x\C-b" `list-buffers)
 ;; Turn on font-lock mode for Emacs
 (global-font-lock-mode t)
-
-(require 'setnu)
 
 ;; Always end a file with a newline
 (setq require-final-newline t)
@@ -91,9 +94,9 @@
 
 ;; custom key bindings
 
-(global-set-key "\C-cd" 'insert-time-string)
+(global-set-key "\C-d" 'insert-time-string)
 (global-set-key "\C-g" 'goto-line)
- 
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -115,12 +118,6 @@
  '(gutter-buffers-tab-visible-p nil)
  '(inhibit-startup-screen t)
  '(mail-user-agent (quote message-user-agent))
- '(notmuch-saved-searches
-   (quote
-    (("new qemu" . "tag:qemu AND tag:unread")
-     (:name "new xen" :query "tag:xen and tag:unread")
-     (:name "tome" :query "tag:unread and to:ncmike@ncultra.org"))))
- '(notmuch-search-oldest-first nil)
  '(paren-mode (quote sexp) nil (paren))
  '(query-user-mail-address nil)
  '(safe-local-variable-values (quote ((c-file-style . bsd))))
@@ -132,34 +129,51 @@
  '(tool-bar-mode nil)
  '(toolbar-visible-p nil)
  '(tramp-debug-buffer t)
- '(user-mail-address "ncmike@ncultra.org"))
+ '(user-mail-address "ncmike@ncultra.org")
+ '(version-control t)
+ '(vc-make-backup-files t)
+ '(kept-new-versions 10)
+ '(kept-old-versions 1)
+ '(delete-old-versions t)
+ )
 
-;;(require 'notmuch)
-
-;; (setq notmuch-saved-searches '(("new qemu" . "tag:qemu AND tag:unread")))
-
-
-
-;;(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- ;;'(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 128 :width normal :foundry "urw" :family "Nimbus Mono L")))))
 ;(require 'efs)
 (require 'tramp)
-(require 'calendar)
+;(require 'calendar)
 (require 'cscope)
 (require 'xcscope)
 (require 'cl)
-(add-hook 'fundamental-mode 'mail-mode 'auto-fill-mode) 
-
-(add-hook 'text-mode-hook 'turn-on-setnu-mode)
+(add-hook 'fundamental-mode 'mail-mode 'auto-fill-mode)
 
 (defun insert-c-token ()
   (interactive)
   (insert "-*- linux-c -*-"))
-(global-set-key [f6] 'insert-c-token)
+
+(defun insert-lm-src ()
+  (interactive)
+  (insert-file-contents "~/.emacs.d/lm_src_template"))
+(global-set-key [f7] 'insert-lm-src)
+
+(defun insert-lm-src-hdr ()
+  (interactive)
+  (insert-file-contents "~/.emacs.d/lm_src_header"))
+(global-set-key [f8] 'insert-lm-src-hdr)
+
+(defconst lm
+  '( "bsd"
+     (c-basic-offset . 2)
+     (tab-width . 2)
+     (indent-tabs-mode . nil)
+     (c-hanging-braces-alist     . ((substatement-open before)
+				    (brace-list-open)))
+     (c-cleanup-list             . (one-liner-defun
+				    empty-defun-braces
+				    defun-close-semi
+				    list-close-comma
+				    c-lineup-C-comments))
+     )
+  "lm C style")
+(c-add-style "lm" lm )
 
 (defconst xen-style
   '( "bsd"
@@ -183,12 +197,11 @@
 
 (add-hook 'c-mode-common-hook
           (lambda () (c-toggle-auto-hungry-state 1)))
-(add-hook 'c-mode-common-hook 'turn-on-setnu-mode)
 
 (add-hook 'objc-mode-hook
  	  (lambda () (auto-complete-mode t)))
 (add-hook 'c-mode-common-hook
-	  (lambda () 
+	  (lambda ()
 	    (yas/minor-mode t)))
 (add-hook 'objc-mode-hook
  	  (lambda () (yas-load-objc)))
@@ -204,10 +217,12 @@
 (setq c-style-variables-are-local-p t)
 (setq auto-c-mode-alist
   '(
-	("/linux"   . "linux")
-	("/xen"     . "xen")
-        ("/Classes" . "bsd")
-        (""         . "bsd")))
+	("/linux"          . "linux")
+	("/xen"            . "xen")
+        ("/Classes"        . "bsd")
+        ("/lm_hypervisor"  . "lm")
+        ("/flag-test"      . "lm")
+	(""                . "lm")))
 
 (defun my-c-mode-hooks ()
   "Look at auto-c-mode-alist to decide on the c style mode"
@@ -227,10 +242,8 @@
                     keep-going nil)))
         (setq alist (cdr alist)))
       (c-set-style mode)
-      (setnu-mode())
-
 )))
-	
+
 (add-hook 'c-mode-hook 'my-c-mode-hooks)
 (add-hook 'c++-mode-hook 'my-c-mode-hooks)
 (add-hook 'objc-mode-hook 'my-c-mode-hooks)
@@ -242,6 +255,13 @@
   (save-excursion
 	(beginning-of-buffer)
 	(replace-regexp "[  \t]+$" "")))
+
+(defun trim-and-save()
+  (interactive)
+  (trim-trailing-whitespace)
+  (save-buffer 64))
+
+(global-set-key "\C-x\C-s" `trim-and-save)
 
 (defun checkpatch()
   (interactive)
@@ -259,6 +279,15 @@
   (interactive)
   (compile (concat "gcc -ggdb " (buffer-file-name))))
 
+(defun lmcb()
+  (interactive)
+  (compile "~/bin/lmcb.sh"))
+(global-set-key "\C-B" 'lmcb)
+
+(defun lmb()
+  (interactive)
+  (compile "~/bin/lmb.sh"))
+(global-set-key "\C-x\C-x" 'lmb)
 
 (defun whack-whitespace (arg)
       "Delete all white space from point to the next word.  With prefix ARG
@@ -287,19 +316,19 @@
 
 ;;---------------------------------------------------------------
 
-;(custom-set-faces
+(custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-;'(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
+'(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
 
 ;;-------------------more stuff-----------------------
 
 ;; a copy key, leaves the text as-is
 (global-set-key "\C-Q" 'copy-region-as-kill)
 
-(global-set-key "\C-B" 'compile)
+;(global-set-key "\C-B" 'compile)
 
 (defun ew()
   (interactive)
