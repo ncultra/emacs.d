@@ -49,6 +49,7 @@
                         org-mode))
 
 (ac-config-default)
+(global-auto-revert-mode t)
 (global-auto-complete-mode t)
 
 (add-to-list 'load-path "~/.emacs.d/packages/yasnippet")
