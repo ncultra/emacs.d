@@ -5,10 +5,24 @@
 (setq windmove-window-distance-delta 2)
 (desktop-save-mode 1)
 
+(when (getenv "EMACSSAVEMODEDIR")
+  (setq desktop-path (list (getenv "EMACSSAVEMODEDIR"))) )
+
+
+; from http://www.emacswiki.org/emacs/Desktop#toc3
+; "add something like this to your init file to auto-save your desktop when Emacs is idle: – Doom"
+(require 'desktop)
+  (defun my-desktop-save ()
+    (interactive)
+    ;; Don't call desktop-save-in-desktop-dir, as it prints a message.
+    (if (eq (desktop-owner) (emacs-pid))
+        (desktop-save desktop-dirname)))
+  (add-hook 'auto-save-hook 'my-desktop-save)
+
 (when (display-graphic-p)
   (tool-bar-mode -1))
 
-(add-to-list 'load-path "~/.emacs.d/")
+;;(add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/packages")
 (add-to-list 'load-path "~/.emacs.d/auto-save-list")
 (add-to-list 'load-path "~/.emacs.d/ac-dict")
@@ -160,6 +174,21 @@
   (insert-file-contents "~/.emacs.d/lm_src_header"))
 (global-set-key [f8] 'insert-lm-src-hdr)
 
+(defun insert-printk-debug()
+  (interactive)
+  (insert "printk(KERN_DEBUG \"%s: %s %u\\n\", __FILE__, __FUNCTION__, __LINE__);"))
+(global-set-key [f6] 'insert-printk-debug)
+
+(defun insert-log-event-debug()
+  (interactive)
+  (insert "LOG_EVENT_DEBUG(LEVT_STD,\n\t \"%s: %s %u\\n\", __FILE__, __FUNCTION__, __LINE__);"))
+(global-set-key [f9] 'insert-log-event-debug)
+
+(defun insert-asm-bp()
+  (interactive)
+  (insert "wmb(); asm volatile(\"int $3\\n\\t\"::: \"memory\");"))
+(global-set-key [f10] 'insert-asm-bp)
+
 (defconst lm
   '( "bsd"
      (c-basic-offset . 2)
@@ -264,6 +293,59 @@
 
 (global-set-key "\C-x\C-s" `trim-and-save)
 
+;; Stolen from (http://endlessparentheses.com/ansi-colors-in-the-compilation-buffer-output.html)
+(require 'ansi-color)
+(defun endless/colorize-compilation ()
+  "Colorize from `compilation-filter-start' to `point'."
+  (let ((inhibit-read-only t))
+    (ansi-color-apply-on-region
+     compilation-filter-start (point))))
+
+(add-hook 'compilation-filter-hook
+          #'endless/colorize-compilation)
+
+
+;; Stolen from (https://oleksandrmanzyuk.wordpress.com/2011/11/05/better-emacs-shell-part-i/)
+(defun regexp-alternatives (regexps)
+  "Return the alternation of a list of regexps."
+  (mapconcat (lambda (regexp)
+               (concat "\\(?:" regexp "\\)"))
+             regexps "\\|"))
+
+(defvar non-sgr-control-sequence-regexp nil
+  "Regexp that matches non-SGR control sequences.")
+
+(setq non-sgr-control-sequence-regexp
+      (regexp-alternatives
+       '(;; icon name escape sequences
+         "\033\\][0-2];.*?\007"
+         ;; non-SGR CSI escape sequences
+         "\033\\[\\??[0-9;]*[^0-9;m]"
+         ;; noop
+         "\012\033\\[2K\033\\[1F"
+         )))
+
+(defun filter-non-sgr-control-sequences-in-region (begin end)
+  (save-excursion
+    (goto-char begin)
+    (while (re-search-forward
+            non-sgr-control-sequence-regexp end t)
+      (replace-match ""))))
+
+(defun filter-non-sgr-control-sequences-in-output (ignored)
+  (let ((start-marker
+         (or comint-last-output-start
+             (point-min-marker)))
+        (end-marker
+         (process-mark
+          (get-buffer-process (current-buffer)))))
+    (filter-non-sgr-control-sequences-in-region
+     start-marker
+     end-marker)))
+
+(add-hook 'comint-output-filter-functions
+          'filter-non-sgr-control-sequences-in-output)
+
 (defun checkpatch()
   (interactive)
   (compile (concat "~/bin/checkpatch.pl --emacs --no-tree " (buffer-file-name))))
@@ -354,3 +436,5 @@
      (when (not (frame-parameter nil 'fullscreen)) 'fullboth))))
 
 (global-set-key [f11] 'toggle-fullscreen)
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
