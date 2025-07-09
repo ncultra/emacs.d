@@ -6,8 +6,10 @@
 (desktop-save-mode 1)
 
 (when (getenv "EMACSSAVEMODEDIR")
-  (setq desktop-path (list (getenv "EMACSSAVEMODEDIR"))) )
+  (setq desktop-path (list . (getenv "EMACSSAVEMODEDIR"))) )
 
+; automatically load a locked desktop file
+(setq desktop-load-locked-desktop t)
 
 ; from http://www.emacswiki.org/emacs/Desktop#toc3
 ; "add something like this to your init file to auto-save your desktop when Emacs is idle: – Doom"
@@ -36,6 +38,10 @@
   ;; For important compatibility libraries like cl-lib
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize)
+
+(package-initialize)  ;load and activate packages, including auto-complete
+(ac-config-default)
+(global-auto-complete-mode t)
 
 (autoload 'markdown-mode "markdown-mode"
    "Major mode for editing Markdown files" t)
@@ -66,14 +72,14 @@
 (global-auto-revert-mode t)
 (global-auto-complete-mode t)
 
-(add-to-list 'load-path "~/.emacs.d/packages/yasnippet")
-(require 'yasnippet)
+;;(add-to-list 'load-path "~/.emacs.d/packages/yasnippet")
+;;(require 'yasnippet)
 
-(yas/initialize)
+;;(yas/initialize)
 
-(yas/load-directory "~/.emacs.d/packages/yasnippet/snippets")
-(yas/load-directory "~/.emacs.d/packages/yasnippet/mysnippets")
-;(yas/load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
+;;(yas/load-directory "~/.emacs.d/packages/yasnippet/snippets")
+;;(yas/load-directory "~/.emacs.d/packages/yasnippet/mysnippets")
+;;(yas/load-directory "~/.emacs.d/packages/yasnippet/objc-snippets")
 
 ;(defun yas-load-objc ()
 ;  (interactive)
@@ -109,7 +115,7 @@
 
 ;; custom key bindings
 
-(global-set-key "\C-d" 'insert-time-string)
+(global-set-key "\C-c" 'desktop-change-dir)
 (global-set-key "\C-g" 'goto-line)
 
 (custom-set-variables
@@ -119,6 +125,8 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
+ '(ansi-color-names-vector
+   ["black" "red3" "ForestGreen" "yellow3" "blue" "magenta3" "DeepSkyBlue" "gray50"])
  '(c-default-style
    (quote
     ((c-mode . "bsd")
@@ -127,12 +135,17 @@
      (other . "gnu"))))
  '(column-number-mode t)
  '(custom-enabled-themes (quote (wombat)))
+ '(delete-old-versions t)
  '(display-battery-mode t)
  '(display-time-mode t)
  '(font-lock-mode t t (font-lock))
+ '(global-display-line-numbers-mode t)
  '(gutter-buffers-tab-visible-p nil)
  '(inhibit-startup-screen t)
+ '(kept-new-versions 10)
+ '(kept-old-versions 1)
  '(mail-user-agent (quote message-user-agent))
+ '(package-selected-packages (quote (yasnippet auto-complete)))
  '(paren-mode (quote sexp) nil (paren))
  '(query-user-mail-address nil)
  '(safe-local-variable-values (quote ((c-file-style . bsd))))
@@ -145,15 +158,14 @@
  '(toolbar-visible-p nil)
  '(tramp-debug-buffer t)
  '(user-mail-address "ncmike@ncultra.org")
- '(version-control t)
  '(vc-make-backup-files t)
- '(kept-new-versions 10)
- '(kept-old-versions 1)
- '(delete-old-versions t)
- )
+ '(version-control t))
 
 ;(require 'efs)
 (require 'tramp)
+
+(setq tramp-default-method "ssh")
+
 ;(require 'calendar)
 (require 'cscope)
 (require 'xcscope)
@@ -176,18 +188,19 @@
 
 (defun insert-printk-debug()
   (interactive)
-  (insert "printk(KERN_DEBUG \"%s: %s %u\\n\", __FILE__, __FUNCTION__, __LINE__);"))
+  (insert "pr_debug(\"(%s): \\n\", __func__);"))
 (global-set-key [f6] 'insert-printk-debug)
 
 (defun insert-log-event-debug()
   (interactive)
-  (insert "LOG_EVENT_DEBUG(LEVT_STD,\n\t \"%s: %s %u\\n\", __FILE__, __FUNCTION__, __LINE__);"))
+   (insert "pr_debug(\"(%s): line %d\\n\", __func__, __LINE__);"))
 (global-set-key [f9] 'insert-log-event-debug)
 
 (defun insert-asm-bp()
   (interactive)
   (insert "wmb(); asm volatile(\"int $3\\n\\t\"::: \"memory\");"))
-(global-set-key [f10] 'insert-asm-bp)
+;(global-set-key [f10] 'insert-asm-bp)
+
 
 (defconst lm
   '( "bsd"
@@ -215,13 +228,48 @@
   "Xen C Programming Style")
 (c-add-style "xen" xen-style )
 
+(defun c-lineup-arglist-tabs-only (ignored)
+  "Line up argument lists by tabs, not spaces"
+  (let* ((anchor (c-langelem-pos c-syntactic-element))
+	 (column (c-langelem-2nd-pos c-syntactic-element))
+	 (offset (- (1+ column) anchor))
+	 (steps (floor offset c-basic-offset)))
+    (* (max steps 1)
+       c-basic-offset)))
+
 (defconst linux-c-style
 	'( "K&R"
-	(c-basic-offset . 8)
-	(indent-tabs-mode . t)
-	(tab-width . 8)
+	   (c-basic-offset . 8)
+	   (c-label-minimum-indentation . 0)
+	   (c-offsets-alist . (
+			       (arglist-close         . c-lineup-arglist-tabs-only)
+			       (arglist-cont-nonempty .
+						      (c-lineup-gcc-asm-reg c-lineup-arglist-tabs-only))
+			       (arglist-intro         . +)
+			       (brace-list-intro      . +)
+			       (c                     . c-lineup-C-comments)
+			       (case-label            . 0)
+			       (comment-intro         . c-lineup-comment)
+			       (cpp-define-intro      . +)
+			       (cpp-macro             . -1000)
+			       (cpp-macro-cont        . +)
+			       (defun-block-intro     . +)
+			       (else-clause           . 0)
+			       (func-decl-cont        . +)
+			       (inclass               . +)
+			       (inher-cont            . c-lineup-multi-inher)
+			       (knr-argdecl-intro     . 0)
+			       (label                 . -1000)
+			       (statement             . 0)
+			       (statement-block-intro . +)
+			       (statement-case-intro  . +)
+			       (statement-cont        . +)
+			       (substatement          . +)
+			       ))
+	   (indent-tabs-mode . t)
+	   (show-trailing-whitespace . t)
+	   )
 	)
-"Linux CodingStyle")
 (c-add-style "linux" linux-c-style )
 (setq c-default-style "linux")
 
@@ -230,11 +278,11 @@
 
 (add-hook 'objc-mode-hook
  	  (lambda () (auto-complete-mode t)))
-(add-hook 'c-mode-common-hook
-	  (lambda ()
-	    (yas/minor-mode t)))
-(add-hook 'objc-mode-hook
- 	  (lambda () (yas-load-objc)))
+;;(add-hook 'c-mode-common-hook
+;;	  (lambda ()
+;;	    (yas/minor-mode t)))
+;;(add-hook 'objc-mode-hook
+;; 	  (lambda () (yas-load-objc)))
 
 (setq auto-mode-alist
 	      (append '(("\\.hpp" . c++-mode))  auto-mode-alist ))
@@ -247,12 +295,12 @@
 (setq c-style-variables-are-local-p t)
 (setq auto-c-mode-alist
   '(
-	("/linux"          . "linux")
-	("/xen"            . "xen")
-        ("/Classes"        . "bsd")
-        ("/lm_hypervisor"  . "lm")
-        ("/flag-test"      . "lm")
-	(""                . "lm")))
+    ("/linux"          . "linux")
+    ("/rmpopt"          . "linux")
+    ("/Classes"        . "bsd")
+    ("/lm_hypervisor"  . "lm")
+    ("/flag-test"      . "lm")
+    (""                . "lm")))
 
 (defun my-c-mode-hooks ()
   "Look at auto-c-mode-alist to decide on the c style mode"
@@ -348,15 +396,11 @@
 
 (defun checkpatch()
   (interactive)
-  (compile (concat "~/bin/checkpatch.pl --emacs --no-tree " (buffer-file-name))))
+  (compile (concat "~/src/linux-mdday/scripts/checkpatch.pl --emacs --root=/home/mdday/src/linux-mdday/ --strict "  (buffer-file-name))))
 
 (defun checksrc()
   (interactive)
-  (compile (concat "~/bin/checkpatch.pl --emacs --no-tree --file --no-signoff " (buffer-file-name))))
-
-(defun checksource()
-  (interactive)
-  (compile (concat "~/src/checkpatch/checkpatch.emacs.pl --emacs --no-tree --no-patch  " (buffer-file-name))))
+  (compile (concat "~/src/linux-mdday/scripts/checkpatch.pl --emacs --root=/home/mdday/src/linux-mdday/ --file --no-signoff " (buffer-file-name))))
 
 (defun gcc()
   (interactive)
@@ -404,7 +448,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-'(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
+ '(default ((t (:family "Courier 10 Pitch" :foundry "bitstream" :slant normal :weight normal :height 111 :width normal)))))
 
 ;;-------------------more stuff-----------------------
 
@@ -416,6 +460,13 @@
 (defun ew()
   (interactive)
 ;;  (split-window-horizontally)
+  (split-window-horizontally)
+  (split-window-vertically)
+  (balance-windows))
+
+(defun ew3()
+  (interactive)
+  (split-window-horizontally)
   (split-window-horizontally)
   (split-window-vertically)
   (balance-windows))
